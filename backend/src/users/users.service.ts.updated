@@ -1,0 +1,71 @@
+import { Injectable } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
+import * as bcrypt from 'bcryptjs';
+import { PrismaClient } from '@prisma/client';
+import { v4 as uuidv4 } from 'uuid';
+
+@Injectable()
+export class UsersService {
+  constructor(private prisma: PrismaService) {}
+
+  async findByEmail(email: string) {
+    return this.prisma.user.findUnique({ where: { email } });
+  }
+
+  async create(data: { email: string; password?: string; name?: string }) {
+    return this.prisma.user.create({
+      data: {
+        email: data.email,
+        password: data.password,
+        name: data.name,
+      },
+    });
+  }
+
+  async createRefreshToken(userId: number) {
+    const token = Math.random().toString(36).slice(2);
+    const hashed = await bcrypt.hash(token, 10);
+    const rt = await this.prisma.refreshToken.create({
+      data: { token: hashed, userId },
+    });
+    // return raw token for client
+    return { token, id: rt.id };
+  }
+
+  async verifyRefreshToken(userId: number, token: string) {
+    const tokens = await this.prisma.refreshToken.findMany({ where: { userId } });
+    for (const t of tokens) {
+      const match = await bcrypt.compare(token, t.token);
+      if (match) return t;
+    }
+    return null;
+  }
+
+  async revokeRefreshToken(id: number) {
+    await this.prisma.refreshToken.delete({ where: { id } });
+  }
+
+  async createPasswordReset(userId: number, ttlMinutes = 30) {
+    const token = uuidv4();
+    const expiresAt = new Date(Date.now() + ttlMinutes * 60 * 1000);
+    await this.prisma.passwordReset.create({ data: { token, userId, expiresAt } });
+    return token;
+  }
+
+  async verifyPasswordReset(token: string) {
+    const pr = await this.prisma.passwordReset.findUnique({ where: { token } });
+    if (!pr) return null;
+    if (pr.used) return null;
+    if (pr.expiresAt < new Date()) return null;
+    return pr;
+  }
+
+  async markPasswordResetUsed(id: number) {
+    await this.prisma.passwordReset.update({ where: { id }, data: { used: true } });
+  }
+
+  async setPassword(userId: number, newPassword: string) {
+    const hashed = await bcrypt.hash(newPassword, 10);
+    await this.prisma.user.update({ where: { id: userId }, data: { password: hashed } });
+  }
+}
