@@ -109,7 +109,8 @@ model PlatformConfig {
 model SystemLog {
   id        String   @id @default(cuid())
   action    String
-  userId    String?
+  userId    Int?
+  user      User?    @relation(fields: [userId], references: [id])
   ip        String?
   createdAt DateTime @default(now())
 }
