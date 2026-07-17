@@ -95,3 +95,21 @@ model Payment {
   method       String
   createdAt    DateTime @default(now())
 }
+
+// Platform configuration controlled by the Super Admin
+model PlatformConfig {
+  id          String   @id @default(cuid())
+  photoFee    Float    @default(2.0)
+  maxStorage  Int      @default(10) // in GB
+  maintenance Boolean  @default(false)
+  createdAt   DateTime @default(now())
+}
+
+// Basic system logs for admin auditing
+model SystemLog {
+  id        String   @id @default(cuid())
+  action    String
+  userId    String?
+  ip        String?
+  createdAt DateTime @default(now())
+}
