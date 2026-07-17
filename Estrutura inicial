@@ -1,0 +1,27 @@
+fotoeduc-enterprise/
+│
+├── apps/
+│   ├── web/
+│   ├── admin/
+│   ├── api/
+│   └── mobile/
+│
+├── packages/
+│   ├── ui/
+│   ├── auth/
+│   ├── database/
+│   ├── storage/
+│   ├── ai/
+│   ├── watermark/
+│   ├── payments/
+│   ├── notifications/
+│   ├── security/
+│   ├── analytics/
+│   └── shared/
+│
+├── prisma/
+├── docker/
+├── docs/
+├── scripts/
+├── public/
+└── uploads/
